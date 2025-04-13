@@ -67,8 +67,12 @@ def read_bucket_policy(aws_s3_client, bucket_name):
 
 def upload_small_file(aws_s3_client, bucket_name, file_path):
     file_name = os.path.basename(file_path)
-    aws_s3_client.upload_file(file_path, bucket_name, file_name)
-    return True
+    try:
+        aws_s3_client.upload_file(file_path, bucket_name, file_name, ExtraArgs={'ACL': 'public-read'})
+        return True
+    except Exception as e:
+        print(f"Failed to upload {file_name} to {bucket_name}: {e}")
+        return False
 
 
 def upload_large_file(aws_s3_client, bucket_name, file_path):
@@ -97,3 +101,14 @@ def get_objects(aws_s3_client, bucket_name):
     if "Contents" in response:
         return [obj["Key"] for obj in response["Contents"]]
     return []
+
+
+def delete_object(aws_s3_client, bucket_name, file_name):
+    try:
+        response = aws_s3_client.delete_object(Bucket=bucket_name, Key=file_name)
+        status_code = response["ResponseMetadata"]["HTTPStatusCode"]
+        if status_code == 204:
+            return True
+    except Exception as e:
+        print(f"Error deleting file {file_name} from bucket {bucket_name}: {e}")
+    return False

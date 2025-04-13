@@ -4,7 +4,7 @@ from botocore.exceptions import ClientError
 from auth import init_client
 from bucket.crud import list_buckets, create_bucket, delete_bucket, bucket_exists
 from bucket.policy import read_bucket_policy, assign_policy
-from object.crud import download_file_and_upload_to_s3, get_objects, upload_small_file, upload_large_file
+from object.crud import download_file_and_upload_to_s3, get_objects, upload_small_file, upload_large_file, delete_object
 from bucket.encryption import set_bucket_encryption, read_bucket_encryption
 from bucket.lifecycle import set_lifecycle_policy
 import argparse
@@ -197,6 +197,12 @@ parser.add_argument("-slp",
                     const="True",
                     default="False")
 
+parser.add_argument("-del",
+                    "--delete_object",
+                    type=str,
+                    help="Delete a specific file (Key) from the bucket.",
+                    default=None)
+
 
 def main():
   s3_client = init_client()
@@ -261,6 +267,12 @@ def main():
     if args.set_lifecycle_policy == "True":
       if set_lifecycle_policy(s3_client, args.bucket_name):
         print("Lifecycle policy set successfully")
+
+    if args.delete_object:
+      if delete_object(s3_client, args.bucket_name, args.delete_object):
+        print(f"File {args.delete_object} deleted successfully from bucket {args.bucket_name}")
+      else:
+        print(f"Failed to delete file {args.delete_object} from bucket {args.bucket_name}")
 
   if (args.list_buckets):
     buckets = list_buckets(s3_client)
